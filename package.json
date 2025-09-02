@@ -24,11 +24,11 @@
     "components",
     "ui"
   ],
-  "author": "",
+  "author": "hllshiro",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git"
+    "url": "https://github.com/hllshiro/vue-resizable"
   },
   "scripts": {
     "dev": "vite",
