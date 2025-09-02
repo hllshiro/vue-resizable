@@ -1,12 +1,12 @@
-# vue-resizeable
+# vue-resizable
 
-A component for vuejs resizeable areas,Supports random combination,support custom styles
+A component for vuejs resizable areas,Supports random combination,support custom styles
 
-[![vue-resizeable.gif](https://i.postimg.cc/8C0Rfsvj/vue-resizeable.gif)](https://postimg.cc/JyjD9rPL)
+![vue-resizable.gif](./assets/vue-resizable.gif)
 ### install
 
 ```bash
-npm install vue-resizeable
+npm install vue-resizable
 ```
 
 ## Component Registration 
@@ -15,21 +15,21 @@ npm install vue-resizeable
 // main.ts
 
 import { createApp } from 'vue'
-import VueResizeable from 'vue-resizeable'
-import 'vue-resizeable/style.css'
+import Vueresizable from 'vue-resizable'
+import 'vue-resizable/style.css'
 
-createApp(App).use(VueResizeable).mount('#app')
+createApp(App).use(Vueresizable).mount('#app')
 ```
-The above imports VueResizeable entirely. Note that CSS file needs to be imported separately.
+The above imports Vueresizable entirely. Note that CSS file needs to be imported separately.
 
 ### Local Registration
-In this way, component sub-components, such as ResizeableContainer and ResizeablePanel and ResizeableSplitter, need to be registered separately, and they are only valid in the current component after registration.that CSS file needs to be imported separately.
+In this way, component sub-components, such as resizableContainer and resizablePanel and resizableSplitter, need to be registered separately, and they are only valid in the current component after registration.that CSS file needs to be imported separately.
 
 ```javascript
 // index.vue
 <script setup>
-    import { ResizeableContainer, ResizeablePanel, ResizeableSplitter } from 'vue-resizeable'
-    import 'vue-resizeable/style.css'
+    import { resizableContainer, resizablePanel, resizableSplitter } from 'vue-resizable'
+    import 'vue-resizable/style.css'
 </script>
 ```
 ## Example
@@ -39,22 +39,22 @@ In this way, component sub-components, such as ResizeableContainer and Resizeabl
 // index.vue
 <template>
   <!-- horizontal -->
-  <ResizeableContainer direction="horizontal" style="height: 100vh">
-    <ResizeablePanel style="min-width: 150px; background: #ffe0b2">Left</ResizeablePanel>
-    <ResizeableSplitter />
-    <ResizeablePanel :style="middleStyle">
+  <resizableContainer direction="horizontal" style="height: 100vh">
+    <resizablePanel style="min-width: 150px; background: #ffe0b2">Left</resizablePanel>
+    <resizableSplitter />
+    <resizablePanel :style="middleStyle">
       <!-- vertical -->
-      <ResizeableContainer direction="vertical">
-        <ResizeablePanel style="min-height: 150px">Top</ResizeablePanel>
-        <ResizeableSplitter style="background: #000" />
-        <ResizeablePanel style="height: 200px; min-height: 150px">center</ResizeablePanel>
-        <ResizeableSplitter />
-        <ResizeablePanel style="height: 300px; min-height: 50px; border: 1px solid #ccc">Bottom</ResizeablePanel>
-      </ResizeableContainer>
-    </ResizeablePanel>
-    <ResizeableSplitter />
-    <ResizeablePanel :style="rightStyle">Right</ResizeablePanel>
-  </ResizeableContainer>
+      <resizableContainer direction="vertical">
+        <resizablePanel style="min-height: 150px">Top</resizablePanel>
+        <resizableSplitter style="background: #000" />
+        <resizablePanel style="height: 200px; min-height: 150px">center</resizablePanel>
+        <resizableSplitter />
+        <resizablePanel style="height: 300px; min-height: 50px; border: 1px solid #ccc">Bottom</resizablePanel>
+      </resizableContainer>
+    </resizablePanel>
+    <resizableSplitter />
+    <resizablePanel :style="rightStyle">Right</resizablePanel>
+  </resizableContainer>
 </template>
 
 <script setup>

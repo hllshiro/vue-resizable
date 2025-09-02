@@ -1,9 +1,9 @@
 {
-  "name": "vue-resizeable",
-  "version": "1.0.2",
+  "name": "vue-resizable",
+  "version": "0.0.1",
   "type": "module",
-  "main": "./dist/vue-resizeable.umd.js",
-  "module": "./dist/vue-resizeable.es.js",
+  "main": "./dist/vue-resizable.umd.js",
+  "module": "./dist/vue-resizable.es.js",
   "types": "./dist/types/index.d.ts",
   "files": [
     "dist"
@@ -11,10 +11,10 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/vue-resizeable.es.js",
-      "require": "./dist/vue-resizeable.umd.js"
+      "import": "./dist/vue-resizable.es.js",
+      "require": "./dist/vue-resizable.umd.js"
     },
-    "./style.css": "./dist/vue-resizeable.css"
+    "./style.css": "./dist/vue-resizable.css"
   },
   "repository": {
     "type": "git",
@@ -25,10 +25,8 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "vue": "^3.5.13"
-  },
   "devDependencies": {
+    "vue": "^3.5.13",
     "@types/node": "^22.13.4",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",

@@ -16,8 +16,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/components/resize/index.ts"),
-      name: "VueResizeable",
-      fileName: (format) => `vue-resizeable.${format}.js`,
+      name: "Vueresizable",
+      fileName: (format) => `vue-resizable.${format}.js`,
     },
     rollupOptions: {
       external: ["vue"],
