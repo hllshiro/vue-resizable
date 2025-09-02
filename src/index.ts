@@ -1,9 +1,25 @@
-import { type App, type Plugin } from "vue";
+import type { App } from "vue";
 import ResizableContainer from "./components/ResizableContainer.vue";
 import ResizablePanel from "./components/ResizablePanel.vue";
 import ResizableSplitter from "./components/ResizableSplitter.vue";
 
-export const VueResizable: Plugin = {
+// Export types
+export type {
+  ResizableContainerProps,
+  ResizablePanelProps,
+  ResizableSplitterProps,
+  VueResizablePlugin,
+  ResizableContainerComponent,
+  ResizablePanelComponent,
+  ResizableSplitterComponent,
+  VueResizableComponents,
+} from "./types";
+
+// Export individual components for tree-shaking (named exports)
+export { ResizableContainer, ResizablePanel, ResizableSplitter };
+
+// Plugin installation interface
+export const VueResizable = {
   install(app: App) {
     app.component("ResizableContainer", ResizableContainer);
     app.component("ResizablePanel", ResizablePanel);
@@ -11,8 +27,5 @@ export const VueResizable: Plugin = {
   },
 };
 
-// 导出单个组件用于按需引入
-export { ResizableContainer, ResizablePanel, ResizableSplitter };
-
-// 默认导出插件安装方式
+// Default export for plugin installation
 export default VueResizable;
