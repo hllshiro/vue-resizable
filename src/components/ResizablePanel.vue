@@ -1,4 +1,4 @@
-<!-- ResizePanel.vue -->
+<!-- ResizablePanel.vue -->
 <template>
   <div class="resize-panel">
     <slot />
@@ -8,7 +8,7 @@
 <script setup lang="ts"></script>
 
 <style scoped>
-  .resize-panel {
-    flex-shrink: 0;
-  }
+.resize-panel {
+  flex-shrink: 0;
+}
 </style>
