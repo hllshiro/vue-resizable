@@ -1,6 +1,6 @@
 {
   "name": "@hllshiro/vue-resizable",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "main": "./dist/vue-resizable.umd.js",
   "module": "./dist/vue-resizable.es.js",
@@ -14,7 +14,8 @@
       "import": "./dist/vue-resizable.es.js",
       "require": "./dist/vue-resizable.umd.js"
     },
-    "./dist/style.css": "./dist/style.css"
+    "./style.css": "./dist/vue-resizable.css",
+    "./dist/style.css": "./dist/vue-resizable.css"
   },
   "description": "A Vue 3 resizable components library",
   "keywords": [

@@ -32,7 +32,7 @@ Register all components globally in your main application file:
 // main.ts
 import { createApp } from 'vue'
 import VueResizable from '@hllshiro/vue-resizable'
-import '@hllshiro/vue-resizable/dist/style.css'
+import '@hllshiro/vue-resizable/style.css'
 
 const app = createApp(App)
 app.use(VueResizable)
@@ -47,7 +47,7 @@ Import and use components locally for better tree-shaking:
 // Component.vue
 <script setup>
 import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
-import '@hllshiro/vue-resizable/dist/style.css'
+import '@hllshiro/vue-resizable/style.css'
 </script>
 ```
 
@@ -60,7 +60,7 @@ This library is built with TypeScript and provides full type definitions. No add
 <script setup lang="ts">
 import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
 import type { Component } from 'vue'
-import '@hllshiro/vue-resizable/dist/style.css'
+import '@hllshiro/vue-resizable/style.css'
 
 // Components are fully typed
 const container: Component = ResizableContainer
@@ -97,7 +97,7 @@ const container: Component = ResizableContainer
 
 <script setup>
 import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
-import '@hllshiro/vue-resizable/dist/style.css'
+import '@hllshiro/vue-resizable/style.css'
 
 const rightStyle = {
   width: '500px',
@@ -134,7 +134,7 @@ const middleStyle = {
 
 <script setup lang="ts">
 import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
-import '@hllshiro/vue-resizable/dist/style.css'
+import '@hllshiro/vue-resizable/style.css'
 
 // TypeScript will provide full intellisense and type checking
 </script>
