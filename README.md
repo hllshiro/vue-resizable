@@ -7,7 +7,7 @@ A Vue 3 component library for creating resizable areas. Supports flexible combin
 ## Installation
 
 ```bash
-npm install vue-resizable
+npm install @hllshiro/vue-resizable
 ```
 
 **Note**: This library requires Vue 3 as a peer dependency. Make sure you have Vue 3 installed in your project:
@@ -31,8 +31,8 @@ Register all components globally in your main application file:
 ```javascript
 // main.ts
 import { createApp } from 'vue'
-import VueResizable from 'vue-resizable'
-import 'vue-resizable/dist/style.css'
+import VueResizable from '@hllshiro/vue-resizable'
+import '@hllshiro/vue-resizable/dist/style.css'
 
 const app = createApp(App)
 app.use(VueResizable)
@@ -46,8 +46,8 @@ Import and use components locally for better tree-shaking:
 ```javascript
 // Component.vue
 <script setup>
-import { ResizableContainer, ResizablePanel, ResizableSplitter } from 'vue-resizable'
-import 'vue-resizable/dist/style.css'
+import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
+import '@hllshiro/vue-resizable/dist/style.css'
 </script>
 ```
 
@@ -58,9 +58,9 @@ This library is built with TypeScript and provides full type definitions. No add
 ```typescript
 // Component.vue
 <script setup lang="ts">
-import { ResizableContainer, ResizablePanel, ResizableSplitter } from 'vue-resizable'
+import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
 import type { Component } from 'vue'
-import 'vue-resizable/dist/style.css'
+import '@hllshiro/vue-resizable/dist/style.css'
 
 // Components are fully typed
 const container: Component = ResizableContainer
@@ -96,8 +96,8 @@ const container: Component = ResizableContainer
 </template>
 
 <script setup>
-import { ResizableContainer, ResizablePanel, ResizableSplitter } from 'vue-resizable'
-import 'vue-resizable/dist/style.css'
+import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
+import '@hllshiro/vue-resizable/dist/style.css'
 
 const rightStyle = {
   width: '500px',
@@ -133,8 +133,8 @@ const middleStyle = {
 </template>
 
 <script setup lang="ts">
-import { ResizableContainer, ResizablePanel, ResizableSplitter } from 'vue-resizable'
-import 'vue-resizable/dist/style.css'
+import { ResizableContainer, ResizablePanel, ResizableSplitter } from '@hllshiro/vue-resizable'
+import '@hllshiro/vue-resizable/dist/style.css'
 
 // TypeScript will provide full intellisense and type checking
 </script>
