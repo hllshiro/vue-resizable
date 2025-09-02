@@ -4,6 +4,25 @@ A Vue 3 component library for creating resizable areas. Supports flexible combin
 
 ![vue-resizable.gif](./assets/vue-resizable.gif)
 
+## Features
+
+- 🎯 **Intuitive Drag Behavior**: Only adjacent panels are affected when dragging splitters
+- 🚀 **High Precision**: Built with native Flexbox for pixel-perfect calculations
+- 🔧 **Smart Layout Management**: Automatic space allocation using flex-grow properties
+- 📱 **Responsive**: Adapts to container size changes automatically
+- 🎨 **Customizable**: Full control over panel sizing and constraints
+- 💪 **TypeScript**: Complete type safety out of the box
+- 🪶 **Lightweight**: Minimal bundle size with zero dependencies
+
+## Architecture
+
+This library uses a **Flexbox-based architecture** that leverages browser-native layout algorithms:
+
+- **Fixed Panels**: Use `flex-grow: 0` with pixel-based sizing for precise control
+- **Flexible Panels**: Use `flex-grow: 1` for automatic space distribution
+- **Smart Conversion**: Flexible panels automatically convert to fixed when dragged for consistent behavior
+- **Space Conservation**: Guarantees total space allocation equals container size
+
 ## Installation
 
 ```bash
@@ -144,24 +163,134 @@ import '@hllshiro/vue-resizable/style.css'
 
 ### ResizableContainer
 
-Props:
+The main container component that manages the layout of panels and splitters.
+
+**Props:**
 - `direction`: `'horizontal' | 'vertical'` - Layout direction
+
+**Features:**
+- Automatically initializes panel sizing based on inline styles
+- Converts pixel values to appropriate flex properties
+- Handles container resize events
 
 ### ResizablePanel
 
-A flexible panel that can be resized. Use CSS `min-width`, `min-height`, `width`, and `height` properties to control sizing constraints.
+A flexible panel that can be resized by adjacent splitters.
+
+**Sizing Behavior:**
+- **Fixed Size**: Set `width` or `height` in pixels (e.g., `style="width: 200px"`)
+  - Panel becomes `flex-grow: 0` with fixed `flex-basis`
+  - Maintains exact size until manually resized
+- **Flexible Size**: No explicit size or use `auto`
+  - Panel becomes `flex-grow: 1` and shares available space
+  - Automatically fills remaining space
+
+**CSS Properties:**
+- `min-width`, `min-height`: Minimum size constraints
+- `max-width`, `max-height`: Maximum size constraints (optional)
+- `width`, `height`: Initial size (converts to fixed mode if in pixels)
+
+**Example:**
+```vue
+<!-- Fixed panel -->
+<ResizablePanel style="width: 200px; min-width: 150px">
+  Fixed width panel
+</ResizablePanel>
+
+<!-- Flexible panel -->
+<ResizablePanel style="min-width: 100px">
+  Flexible panel
+</ResizablePanel>
+```
 
 ### ResizableSplitter
 
-A draggable splitter that allows users to resize adjacent panels.
+A draggable divider that allows users to resize adjacent panels.
+
+**Behavior:**
+- Only affects the two immediately adjacent panels
+- Automatically handles different panel type combinations:
+  - **Fixed + Fixed**: Adjusts pixel values directly
+  - **Flexible + Flexible**: Adjusts `flex-grow` ratios
+  - **Fixed + Flexible**: Converts flexible panel to fixed for consistent behavior
+
+**Styling:**
+- Default size: 5px width/height
+- Hover and active states included
+- Fully customizable via CSS
+
+**Example:**
+```vue
+<ResizableSplitter style="background: #ccc; width: 8px" />
+```
+
+## Migration Guide
+
+### From v0.0.1 to v0.0.2
+
+This version includes significant architectural improvements. While the API remains the same, behavior is more consistent:
+
+**What's Changed:**
+- Dragging splitters now only affects adjacent panels (more intuitive)
+- Improved precision eliminates micro-movements
+- Better space management prevents layout overflow
+
+**What to Check:**
+- Verify that your panel sizing still works as expected
+- Test drag interactions in complex nested layouts
+- No code changes required - only behavioral improvements
+
+## Best Practices
+
+### Panel Sizing Strategy
+
+1. **Use Fixed Panels for Sidebars/Toolbars**
+   ```vue
+   <ResizablePanel style="width: 250px; min-width: 200px">
+     Sidebar content
+   </ResizablePanel>
+   ```
+
+2. **Use Flexible Panels for Main Content**
+   ```vue
+   <ResizablePanel style="min-width: 300px">
+     Main content area
+   </ResizablePanel>
+   ```
+
+3. **Set Meaningful Constraints**
+   - Always set `min-width`/`min-height` to prevent panels from becoming too small
+   - Use `max-width`/`max-height` sparingly, only when necessary
+
+### Performance Tips
+
+- Avoid deeply nested ResizableContainers when possible
+- Use CSS transitions sparingly on resizable panels
+- Set appropriate minimum sizes to prevent layout thrashing
 
 ## Development
 
 This library is built with:
-- Vue 3
-- TypeScript
-- Vite
-- Modern ES modules
+- Vue 3 Composition API
+- TypeScript for type safety
+- Vite for fast builds
+- Native Flexbox for layout calculations
+- Zero external dependencies
+
+## Browser Support
+
+- Chrome/Edge 88+
+- Firefox 78+
+- Safari 14+
+- Modern browsers with Flexbox support
+
+## Contributing
+
+Contributions are welcome! Please ensure:
+- TypeScript types are properly maintained
+- Changes follow the Flexbox-based architecture
+- Performance implications are considered
+- Tests cover new functionality
 
 ## License
 

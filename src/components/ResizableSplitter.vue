@@ -20,14 +20,8 @@ const isActive = ref(false);
 const getPanelMinSize = (panel: HTMLElement, isHorizontal: boolean) => {
   const style = getComputedStyle(panel);
   return isHorizontal
-    ? parseInt(style.minWidth) || 0
-    : parseInt(style.minHeight) || 0;
-};
-
-const getPanelMaxSize = (panel: HTMLElement, isHorizontal: boolean) => {
-  const style = getComputedStyle(panel);
-  const maxSize = isHorizontal ? style.maxWidth : style.maxHeight;
-  return maxSize && maxSize !== "none" ? parseInt(maxSize) : Infinity;
+    ? parseInt(style.minWidth) || 50
+    : parseInt(style.minHeight) || 50;
 };
 
 const startDrag = (e: MouseEvent) => {
@@ -41,35 +35,16 @@ const startDrag = (e: MouseEvent) => {
   if (!prevPanel || !nextPanel) return;
 
   const isHorizontal = direction === "horizontal";
-  const containerSize = isHorizontal
-    ? containerRef.value.offsetWidth
-    : containerRef.value.offsetHeight;
 
-  // 获取所有splitter的总大小
-  const allSplitters = Array.from(containerRef.value.children).filter((child) =>
-    child.classList.contains("resize-splitter")
-  ) as HTMLElement[];
+  // 获取初始尺寸
+  const prevRect = prevPanel.getBoundingClientRect();
+  const nextRect = nextPanel.getBoundingClientRect();
+  const prevInitialSize = isHorizontal ? prevRect.width : prevRect.height;
+  const nextInitialSize = isHorizontal ? nextRect.width : nextRect.height;
 
-  const totalSplitterSize = allSplitters.reduce((total, splitter) => {
-    return (
-      total + (isHorizontal ? splitter.offsetWidth : splitter.offsetHeight)
-    );
-  }, 0);
-
-  const availableSize = containerSize - totalSplitterSize;
-
-  // 获取当前面板的实际像素大小（更精确）
-  const prevPixelSize = isHorizontal
-    ? prevPanel.offsetWidth
-    : prevPanel.offsetHeight;
-  const nextPixelSize = isHorizontal
-    ? nextPanel.offsetWidth
-    : nextPanel.offsetHeight;
-
-  const prevMin = getPanelMinSize(prevPanel, isHorizontal);
-  const nextMin = getPanelMinSize(nextPanel, isHorizontal);
-  const prevMax = getPanelMaxSize(prevPanel, isHorizontal);
-  const nextMax = getPanelMaxSize(nextPanel, isHorizontal);
+  // 获取最小尺寸约束
+  const prevMinSize = getPanelMinSize(prevPanel, isHorizontal);
+  const nextMinSize = getPanelMinSize(nextPanel, isHorizontal);
 
   const startPos = isHorizontal ? e.clientX : e.clientY;
 
@@ -77,48 +52,87 @@ const startDrag = (e: MouseEvent) => {
     const currentPos = isHorizontal ? moveEvent.clientX : moveEvent.clientY;
     const delta = currentPos - startPos;
 
-    // 基于像素计算新尺寸，提高精度
-    let newPrevPixelSize = prevPixelSize + delta;
-    let newNextPixelSize = nextPixelSize - delta;
-
-    // 应用最小和最大尺寸约束
-    newPrevPixelSize = Math.max(
-      prevMin,
-      Math.min(prevMax === Infinity ? availableSize : prevMax, newPrevPixelSize)
-    );
-    newNextPixelSize = Math.max(
-      nextMin,
-      Math.min(nextMax === Infinity ? availableSize : nextMax, newNextPixelSize)
-    );
-
-    // 确保总尺寸不超过可用空间
-    const totalPixelSize = newPrevPixelSize + newNextPixelSize;
-    const maxTotalPixelSize = prevPixelSize + nextPixelSize;
-
-    if (totalPixelSize > maxTotalPixelSize) {
-      const ratio = maxTotalPixelSize / totalPixelSize;
-      newPrevPixelSize = Math.round(newPrevPixelSize * ratio);
-      newNextPixelSize = Math.round(newNextPixelSize * ratio);
+    // 如果移动距离太小，直接返回
+    if (Math.abs(delta) < 1) {
+      return;
     }
 
-    // 再次检查最小尺寸约束
-    if (newPrevPixelSize >= prevMin && newNextPixelSize >= nextMin) {
-      // 转换为高精度百分比（保留4位小数）
-      const newPrevPercentage =
-        Math.round((newPrevPixelSize / availableSize) * 100 * 10000) / 10000;
-      const newNextPercentage =
-        Math.round((newNextPixelSize / availableSize) * 100 * 10000) / 10000;
+    // 计算新的尺寸
+    const newPrevSize = prevInitialSize + delta;
+    const newNextSize = nextInitialSize - delta;
 
+    // 检查最小尺寸约束
+    if (newPrevSize < prevMinSize || newNextSize < nextMinSize) {
+      return;
+    }
+
+    // 检查面板是否为固定尺寸
+    const prevIsFixed = prevPanel.style.flexGrow === "0";
+    const nextIsFixed = nextPanel.style.flexGrow === "0";
+
+    if (prevIsFixed && nextIsFixed) {
+      // 两个都是固定尺寸，直接调整像素值
       if (isHorizontal) {
-        prevPanel.style.width = `${newPrevPercentage}%`;
-        prevPanel.style.flexBasis = `${newPrevPercentage}%`;
-        nextPanel.style.width = `${newNextPercentage}%`;
-        nextPanel.style.flexBasis = `${newNextPercentage}%`;
+        prevPanel.style.width = `${newPrevSize}px`;
+        prevPanel.style.flexBasis = `${newPrevSize}px`;
+        nextPanel.style.width = `${newNextSize}px`;
+        nextPanel.style.flexBasis = `${newNextSize}px`;
       } else {
-        prevPanel.style.height = `${newPrevPercentage}%`;
-        prevPanel.style.flexBasis = `${newPrevPercentage}%`;
-        nextPanel.style.height = `${newNextPercentage}%`;
-        nextPanel.style.flexBasis = `${newNextPercentage}%`;
+        prevPanel.style.height = `${newPrevSize}px`;
+        prevPanel.style.flexBasis = `${newPrevSize}px`;
+        nextPanel.style.height = `${newNextSize}px`;
+        nextPanel.style.flexBasis = `${newNextSize}px`;
+      }
+    } else if (!prevIsFixed && !nextIsFixed) {
+      // 两个都是弹性面板，调整flex-grow比例
+      const totalSize = prevInitialSize + nextInitialSize;
+      const prevRatio = newPrevSize / totalSize;
+      const nextRatio = newNextSize / totalSize;
+
+      // 确保比例合理
+      if (prevRatio > 0.05 && nextRatio > 0.05) {
+        const growTotal =
+          parseFloat(prevPanel.style.flexGrow || "1") +
+          parseFloat(nextPanel.style.flexGrow || "1");
+
+        prevPanel.style.flexGrow = String(growTotal * prevRatio);
+        nextPanel.style.flexGrow = String(growTotal * nextRatio);
+      }
+    } else {
+      // 混合情况：一个固定一个弹性
+      // 策略：将弹性面板转换为固定面板，实现更直观的调整
+      if (prevIsFixed && !nextIsFixed) {
+        // 前面板固定，后面板弹性 -> 将后面板也转为固定
+        nextPanel.style.flexGrow = "0";
+        nextPanel.style.flexShrink = "0";
+
+        if (isHorizontal) {
+          prevPanel.style.width = `${newPrevSize}px`;
+          prevPanel.style.flexBasis = `${newPrevSize}px`;
+          nextPanel.style.width = `${newNextSize}px`;
+          nextPanel.style.flexBasis = `${newNextSize}px`;
+        } else {
+          prevPanel.style.height = `${newPrevSize}px`;
+          prevPanel.style.flexBasis = `${newPrevSize}px`;
+          nextPanel.style.height = `${newNextSize}px`;
+          nextPanel.style.flexBasis = `${newNextSize}px`;
+        }
+      } else if (!prevIsFixed && nextIsFixed) {
+        // 前面板弹性，后面板固定 -> 将前面板也转为固定
+        prevPanel.style.flexGrow = "0";
+        prevPanel.style.flexShrink = "0";
+
+        if (isHorizontal) {
+          prevPanel.style.width = `${newPrevSize}px`;
+          prevPanel.style.flexBasis = `${newPrevSize}px`;
+          nextPanel.style.width = `${newNextSize}px`;
+          nextPanel.style.flexBasis = `${newNextSize}px`;
+        } else {
+          prevPanel.style.height = `${newPrevSize}px`;
+          prevPanel.style.flexBasis = `${newPrevSize}px`;
+          nextPanel.style.height = `${newNextSize}px`;
+          nextPanel.style.flexBasis = `${newNextSize}px`;
+        }
       }
     }
   };
