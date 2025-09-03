@@ -1,6 +1,7 @@
 <!-- ResizableSplitter.vue -->
 <template>
   <div
+    v-show="isVisible"
     class="resize-splitter"
     :class="[direction, { active: isActive }]"
     @mousedown.prevent="startDrag"
@@ -9,7 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref, type Ref } from "vue";
+import { inject, ref, onMounted, nextTick } from "vue";
+import type { Ref } from "vue";
 
 const direction = inject<"horizontal" | "vertical">("resizeDirection")!;
 const containerRef = inject<Ref<HTMLElement | undefined>>("containerRef");
@@ -17,6 +19,129 @@ const splitterRef = ref<HTMLElement>();
 
 const isActive = ref(false);
 
+// 计算分割器是否可见
+const isVisible = ref(true);
+
+// 检查相邻面板的可见性
+const checkAdjacentPanelsVisibility = (): boolean => {
+  if (!splitterRef.value) return false;
+
+  const prevElement = splitterRef.value.previousElementSibling as HTMLElement;
+  const nextElement = splitterRef.value.nextElementSibling as HTMLElement;
+
+  // 获取相邻的面板元素（跳过其他分割器）
+  let prevPanel: HTMLElement | null = null;
+  let nextPanel: HTMLElement | null = null;
+
+  // 向前找到最近的面板
+  let current = prevElement;
+  while (current && !prevPanel) {
+    if (current.classList.contains("resize-panel")) {
+      prevPanel = current;
+      break;
+    }
+    current = current.previousElementSibling as HTMLElement;
+  }
+
+  // 向后找到最近的面板
+  current = nextElement;
+  while (current && !nextPanel) {
+    if (current.classList.contains("resize-panel")) {
+      nextPanel = current;
+      break;
+    }
+    current = current.nextElementSibling as HTMLElement;
+  }
+
+  // 如果没有两个相邻面板，隐藏分割器
+  if (!prevPanel || !nextPanel) {
+    return false;
+  }
+
+  // 检查两个面板是否都可见（使用 v-show 的逻辑）
+  const prevVisible =
+    prevPanel.style.display !== "none" &&
+    getComputedStyle(prevPanel).display !== "none";
+  const nextVisible =
+    nextPanel.style.display !== "none" &&
+    getComputedStyle(nextPanel).display !== "none";
+
+  return prevVisible && nextVisible;
+};
+
+// 更新分割器可见性
+const updateVisibility = () => {
+  const shouldBeVisible = checkAdjacentPanelsVisibility();
+  isVisible.value = shouldBeVisible;
+};
+
+// 监听 DOM 变化以更新可见性
+const observeContainerChanges = () => {
+  if (!containerRef?.value) return;
+
+  const observer = new MutationObserver((mutations) => {
+    let shouldUpdate = false;
+
+    mutations.forEach((mutation) => {
+      // 监听子元素的添加/删除
+      if (mutation.type === "childList") {
+        shouldUpdate = true;
+      }
+      // 监听 style 属性的变化（特别是 display）
+      else if (
+        mutation.type === "attributes" &&
+        mutation.attributeName === "style"
+      ) {
+        const target = mutation.target as HTMLElement;
+        if (target.classList.contains("resize-panel")) {
+          shouldUpdate = true;
+        }
+      }
+    });
+
+    if (shouldUpdate) {
+      nextTick(() => {
+        updateVisibility();
+      });
+    }
+  });
+
+  // 监听容器的子元素变化和属性变化
+  observer.observe(containerRef.value, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["style"],
+  });
+
+  return observer;
+};
+
+// 监听容器内面板的显隐状态变化
+let mutationObserver: MutationObserver | undefined = undefined;
+
+onMounted(() => {
+  nextTick(() => {
+    updateVisibility();
+    mutationObserver = observeContainerChanges();
+  });
+});
+
+// 清理资源
+const cleanup = () => {
+  if (mutationObserver) {
+    mutationObserver.disconnect();
+    mutationObserver = undefined;
+  }
+};
+
+// 组件卸载时清理
+import { onUnmounted } from "vue";
+onUnmounted(() => {
+  cleanup();
+});
+
+// 获取面板的最小尺寸
 const getPanelMinSize = (panel: HTMLElement, isHorizontal: boolean) => {
   const style = getComputedStyle(panel);
   return isHorizontal
@@ -25,7 +150,7 @@ const getPanelMinSize = (panel: HTMLElement, isHorizontal: boolean) => {
 };
 
 const startDrag = (e: MouseEvent) => {
-  if (!splitterRef.value || !containerRef?.value) return;
+  if (!splitterRef.value || !containerRef?.value || !isVisible.value) return;
 
   isActive.value = true;
 
@@ -33,6 +158,19 @@ const startDrag = (e: MouseEvent) => {
   const nextPanel = splitterRef.value.nextElementSibling as HTMLElement;
 
   if (!prevPanel || !nextPanel) return;
+
+  // 确保相邻面板都可见
+  const prevVisible =
+    prevPanel.style.display !== "none" &&
+    getComputedStyle(prevPanel).display !== "none";
+  const nextVisible =
+    nextPanel.style.display !== "none" &&
+    getComputedStyle(nextPanel).display !== "none";
+
+  if (!prevVisible || !nextVisible) {
+    isActive.value = false;
+    return;
+  }
 
   const isHorizontal = direction === "horizontal";
 
@@ -146,6 +284,13 @@ const startDrag = (e: MouseEvent) => {
   document.addEventListener("mousemove", doDrag);
   document.addEventListener("mouseup", stopDrag, { once: true });
 };
+
+// 暴露方法供外部调用
+defineExpose({
+  updateVisibility,
+  isVisible: () => isVisible.value,
+  checkAdjacentPanelsVisibility,
+});
 </script>
 
 <style>
