@@ -13,7 +13,7 @@ export default defineConfig({
       outDir: "dist/types",
       tsconfigPath: "tsconfig.app.json",
       include: ["src/**/*"],
-      exclude: ["src/vite-env.d.ts"],
+      exclude: ["src/vite-env.d.ts", "demo/**/*"],
     }),
   ],
   build: {
