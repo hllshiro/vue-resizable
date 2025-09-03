@@ -1,6 +1,6 @@
 {
   "name": "@hllshiro/vue-resizable",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "main": "./dist/vue-resizable.umd.js",
   "module": "./dist/vue-resizable.es.js",
