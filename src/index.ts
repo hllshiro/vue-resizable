@@ -13,6 +13,8 @@ export type {
   ResizablePanelComponent,
   ResizableSplitterComponent,
   VueResizableComponents,
+  ContainerState,
+  PanelState,
 } from "./types";
 
 // Export individual components for tree-shaking (named exports)
