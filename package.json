@@ -32,24 +32,24 @@
     "url": "https://github.com/hllshiro/vue-resizable"
   },
   "scripts": {
+    "dev": "pnpm --dir demo run dev",
     "build": "vue-tsc -b && vite build",
     "build:types": "vue-tsc -b",
     "build:lib": "vite build",
-    "preview": "vite preview",
-    "prepublishOnly": "npm run build",
-    "demo": "pnpm run build && pnpm --dir demo run dev"
+    "preview": "pnpm --dir demo run preview",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "vue": "^3.0.0"
   },
   "devDependencies": {
-    "vue": "^3.5.13",
-    "@types/node": "^22.13.4",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@types/node": "^22.18.0",
+    "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.7.0",
-    "typescript": "~5.7.2",
-    "vite": "^6.1.0",
-    "vite-plugin-dts": "^4.5.0",
-    "vue-tsc": "^2.2.0"
+    "typescript": "~5.8.3",
+    "vite": "^7.1.4",
+    "vite-plugin-dts": "^4.5.4",
+    "vue": "^3.5.21",
+    "vue-tsc": "^3.0.6"
   }
 }
