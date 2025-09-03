@@ -297,12 +297,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
-import {
-  ResizableContainer,
-  ResizablePanel,
-  ResizableSplitter,
-  type ContainerState,
-} from "@hllshiro/vue-resizable";
+import { type ContainerState } from "@hllshiro/vue-resizable";
 
 // 面板可见性状态
 const panelVisibility = reactive({

@@ -1,4 +1,4 @@
-import type { App } from "vue";
+import type { App, Plugin } from "vue";
 import ResizableContainer from "./components/ResizableContainer.vue";
 import ResizablePanel from "./components/ResizablePanel.vue";
 import ResizableSplitter from "./components/ResizableSplitter.vue";
@@ -21,7 +21,7 @@ export type {
 export { ResizableContainer, ResizablePanel, ResizableSplitter };
 
 // Plugin installation interface
-export const VueResizable = {
+export const VueResizable: Plugin<[]> = {
   install(app: App) {
     app.component("ResizableContainer", ResizableContainer);
     app.component("ResizablePanel", ResizablePanel);
