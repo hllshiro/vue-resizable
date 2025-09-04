@@ -6,8 +6,8 @@ export interface PanelState {
   element: HTMLElement;
   visible: boolean;
   lastSize: number;
-  isFixed: boolean;
   minSize: number;
+  ratio: number; // 新增：面板初始大小比例权重
   flexGrow: number;
 }
 
@@ -25,6 +25,7 @@ export interface ResizableContainerProps {
 
 export interface ResizablePanelProps {
   show?: boolean; // 控制面板显示和隐藏的属性
+  ratio?: number; // 面板初始大小比例，默认值为 1
 }
 
 export interface ResizableSplitterProps {

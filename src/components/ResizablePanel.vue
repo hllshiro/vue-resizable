@@ -18,17 +18,19 @@ interface PanelState {
   element: HTMLElement;
   visible: boolean;
   lastSize: number;
-  isFixed: boolean;
   minSize: number;
+  ratio: number;
   flexGrow: number;
 }
 
 const props = withDefaults(
   defineProps<{
     show?: boolean;
+    ratio?: number;
   }>(),
   {
     show: true,
+    ratio: 1,
   }
 );
 
@@ -50,7 +52,6 @@ const updatePanelVisibility = inject<
 
 // 保存上次的尺寸状态
 const lastSize = ref(0);
-const isFixed = ref(false);
 const minSize = ref(50);
 const flexGrow = ref(1);
 
@@ -79,7 +80,6 @@ const saveCurrentState = () => {
   }
 
   const computedStyle = getComputedStyle(panelRef.value);
-  isFixed.value = computedStyle.flexGrow === "0";
   flexGrow.value = parseFloat(computedStyle.flexGrow || "1");
   minSize.value = getMinSize();
 };
@@ -120,9 +120,9 @@ onMounted(async () => {
       element: panelRef.value,
       visible: props.show,
       lastSize: lastSize.value,
-      isFixed: isFixed.value,
       minSize: minSize.value,
-      flexGrow: flexGrow.value,
+      ratio: props.ratio,
+      flexGrow: props.ratio,
     });
   }
 });
@@ -139,16 +139,17 @@ defineExpose({
   panelId: panelId.value,
   saveCurrentState,
   getLastSize: () => lastSize.value,
-  getIsFixed: () => isFixed.value,
   getMinSize: () => minSize.value,
   getFlexGrow: () => flexGrow.value,
+  getRatio: () => props.ratio,
 });
 </script>
 
 <style>
 .resize-panel {
-  flex-shrink: 0;
-  flex-grow: 0;
+  flex-shrink: 1;
+  flex-grow: 1;
+  flex-basis: 0;
   box-sizing: border-box;
   overflow: hidden;
   /* 确保面板能够正确响应flex-basis */

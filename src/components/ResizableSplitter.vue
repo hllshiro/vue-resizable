@@ -15,6 +15,7 @@ import type { Ref } from "vue";
 
 const direction = inject<"horizontal" | "vertical">("resizeDirection")!;
 const containerRef = inject<Ref<HTMLElement | undefined>>("containerRef");
+const syncPanelRatios = inject<() => void>("syncPanelRatios");
 const splitterRef = ref<HTMLElement>();
 
 const isActive = ref(false);
@@ -204,79 +205,46 @@ const startDrag = (e: MouseEvent) => {
       return;
     }
 
-    // 检查面板是否为固定尺寸
-    const prevIsFixed = prevPanel.style.flexGrow === "0";
-    const nextIsFixed = nextPanel.style.flexGrow === "0";
-
-    if (prevIsFixed && nextIsFixed) {
-      // 两个都是固定尺寸，直接调整像素值
+    // 新的比例模式：直接调整flex-grow比例
+    const totalSize = prevInitialSize + nextInitialSize;
+    if (totalSize > 0) {
+      const prevRatio = Math.max(0.1, newPrevSize / totalSize);
+      const nextRatio = Math.max(0.1, newNextSize / totalSize);
+      
+      // 获取当前的flex-grow值作为基础权重
+      const prevCurrentGrow = parseFloat(prevPanel.style.flexGrow || "1");
+      const nextCurrentGrow = parseFloat(nextPanel.style.flexGrow || "1");
+      const totalGrow = prevCurrentGrow + nextCurrentGrow;
+      
+      // 按新比例重新分配flex-grow
+      prevPanel.style.flexGrow = String(totalGrow * prevRatio);
+      nextPanel.style.flexGrow = String(totalGrow * nextRatio);
+      
+      // 确保面板使用flex模式
+      prevPanel.style.flexShrink = "1";
+      prevPanel.style.flexBasis = "0";
+      nextPanel.style.flexShrink = "1";
+      nextPanel.style.flexBasis = "0";
+      
+      // 清除可能的固定尺寸
       if (isHorizontal) {
-        prevPanel.style.width = `${newPrevSize}px`;
-        prevPanel.style.flexBasis = `${newPrevSize}px`;
-        nextPanel.style.width = `${newNextSize}px`;
-        nextPanel.style.flexBasis = `${newNextSize}px`;
+        prevPanel.style.width = "";
+        nextPanel.style.width = "";
       } else {
-        prevPanel.style.height = `${newPrevSize}px`;
-        prevPanel.style.flexBasis = `${newPrevSize}px`;
-        nextPanel.style.height = `${newNextSize}px`;
-        nextPanel.style.flexBasis = `${newNextSize}px`;
-      }
-    } else if (!prevIsFixed && !nextIsFixed) {
-      // 两个都是弹性面板，调整flex-grow比例
-      const totalSize = prevInitialSize + nextInitialSize;
-      const prevRatio = newPrevSize / totalSize;
-      const nextRatio = newNextSize / totalSize;
-
-      // 确保比例合理
-      if (prevRatio > 0.05 && nextRatio > 0.05) {
-        const growTotal =
-          parseFloat(prevPanel.style.flexGrow || "1") +
-          parseFloat(nextPanel.style.flexGrow || "1");
-
-        prevPanel.style.flexGrow = String(growTotal * prevRatio);
-        nextPanel.style.flexGrow = String(growTotal * nextRatio);
-      }
-    } else {
-      // 混合情况：一个固定一个弹性
-      // 策略：将弹性面板转换为固定面板，实现更直观的调整
-      if (prevIsFixed && !nextIsFixed) {
-        // 前面板固定，后面板弹性 -> 将后面板也转为固定
-        nextPanel.style.flexGrow = "0";
-        nextPanel.style.flexShrink = "0";
-
-        if (isHorizontal) {
-          prevPanel.style.width = `${newPrevSize}px`;
-          prevPanel.style.flexBasis = `${newPrevSize}px`;
-          nextPanel.style.width = `${newNextSize}px`;
-          nextPanel.style.flexBasis = `${newNextSize}px`;
-        } else {
-          prevPanel.style.height = `${newPrevSize}px`;
-          prevPanel.style.flexBasis = `${newPrevSize}px`;
-          nextPanel.style.height = `${newNextSize}px`;
-          nextPanel.style.flexBasis = `${newNextSize}px`;
-        }
-      } else if (!prevIsFixed && nextIsFixed) {
-        // 前面板弹性，后面板固定 -> 将前面板也转为固定
-        prevPanel.style.flexGrow = "0";
-        prevPanel.style.flexShrink = "0";
-
-        if (isHorizontal) {
-          prevPanel.style.width = `${newPrevSize}px`;
-          prevPanel.style.flexBasis = `${newPrevSize}px`;
-          nextPanel.style.width = `${newNextSize}px`;
-          nextPanel.style.flexBasis = `${newNextSize}px`;
-        } else {
-          prevPanel.style.height = `${newPrevSize}px`;
-          prevPanel.style.flexBasis = `${newPrevSize}px`;
-          nextPanel.style.height = `${newNextSize}px`;
-          nextPanel.style.flexBasis = `${newNextSize}px`;
-        }
+        prevPanel.style.height = "";
+        nextPanel.style.height = "";
       }
     }
   };
 
   const stopDrag = () => {
     isActive.value = false;
+    
+    // 拖拽结束后同步面板的ratio状态，而不是重新初始化
+    if (syncPanelRatios) {
+      syncPanelRatios();
+    }
+    
     document.removeEventListener("mousemove", doDrag);
     document.removeEventListener("mouseup", stopDrag);
   };
