@@ -62,7 +62,7 @@
                   <ResizablePanel
                     :show="panelVisibility.panel1"
                     :ratio="1"
-                    style="min-width: 80px; background: #ffcdd2"
+                    style="background: #ffcdd2"
                     @panelShow="onPanelShow"
                     @panelHide="onPanelHide"
                   >
@@ -81,7 +81,7 @@
                   <ResizablePanel
                     :show="panelVisibility.panel2"
                     :ratio="2"
-                    style="min-width: 80px; background: #c8e6c9"
+                    style="background: #c8e6c9"
                     @panelShow="onPanelShow"
                     @panelHide="onPanelHide"
                   >
@@ -100,7 +100,7 @@
                   <ResizablePanel
                     :show="panelVisibility.panel3"
                     :ratio="1"
-                    style="min-width: 80px; background: #bbdefb"
+                    style="background: #bbdefb"
                     @panelShow="onPanelShow"
                     @panelHide="onPanelHide"
                   >
@@ -119,7 +119,7 @@
                   <ResizablePanel
                     :show="panelVisibility.panel4"
                     :ratio="0.5"
-                    style="min-width: 80px; background: #fff3e0"
+                    style="background: #fff3e0"
                     @panelShow="onPanelShow"
                     @panelHide="onPanelHide"
                   >

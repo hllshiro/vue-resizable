@@ -145,8 +145,8 @@ onUnmounted(() => {
 const getPanelMinSize = (panel: HTMLElement, isHorizontal: boolean) => {
   const style = getComputedStyle(panel);
   return isHorizontal
-    ? parseInt(style.minWidth) || 50
-    : parseInt(style.minHeight) || 50;
+    ? parseInt(style.minWidth) || 0
+    : parseInt(style.minHeight) || 0;
 };
 
 const startDrag = (e: MouseEvent) => {

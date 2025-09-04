@@ -42,18 +42,18 @@ const updatePanelVisibility = inject(UPDATE_PANEL_VISIBILITY);
 
 // 保存上次的尺寸状态
 const lastSize = ref(0);
-const minSize = ref(50);
+const minSize = ref(0);
 const flexGrow = ref(1);
 
 // 获取面板的最小尺寸
 const getMinSize = () => {
-  if (!panelRef.value || !direction) return 50;
+  if (!panelRef.value || !direction) return 0;
 
   const style = getComputedStyle(panelRef.value);
   const isHorizontal = direction === "horizontal";
   return isHorizontal
-    ? parseInt(style.minWidth) || 50
-    : parseInt(style.minHeight) || 50;
+    ? parseInt(style.minWidth) || 0
+    : parseInt(style.minHeight) || 0;
 };
 
 // 保存当前尺寸状态（优化版）
@@ -63,7 +63,7 @@ const saveCurrentState = () => {
   const isHorizontal = direction === "horizontal";
   const rect = panelRef.value.getBoundingClientRect();
   const currentSize = isHorizontal ? rect.width : rect.height;
-  
+
   // 只有当尺寸大于0时才保存，避免保存错误值
   if (currentSize > 0) {
     lastSize.value = currentSize;
