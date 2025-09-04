@@ -29,7 +29,7 @@ export interface ResizablePanelProps {
 }
 
 export interface ResizableSplitterProps {
-  // Currently no specific props, behavior controlled by parent container
+  allowSplit?: boolean;
 }
 
 // Event Interfaces

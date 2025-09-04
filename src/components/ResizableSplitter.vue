@@ -5,13 +5,23 @@
     class="resize-splitter"
     :class="[direction, { active: isActive }]"
     @mousedown.prevent="startDrag"
+    @dblclick.prevent="onDoubleClick"
     ref="splitterRef"
   ></div>
 </template>
 
 <script setup lang="ts">
 import { inject, ref, onMounted, nextTick, onUnmounted } from "vue";
-import { RESIZE_DIRECTION, CONTAINER_REF, SYNC_PANEL_RATIOS } from "../types";
+import {
+  RESIZE_DIRECTION,
+  CONTAINER_REF,
+  SYNC_PANEL_RATIOS,
+  type ResizableSplitterProps,
+} from "../types";
+
+const props = withDefaults(defineProps<ResizableSplitterProps>(), {
+  allowSplit: true,
+});
 
 const direction = inject(RESIZE_DIRECTION)!;
 const containerRef = inject(CONTAINER_REF);
@@ -147,6 +157,56 @@ const getPanelMinSize = (panel: HTMLElement, isHorizontal: boolean) => {
   return isHorizontal
     ? parseInt(style.minWidth) || 0
     : parseInt(style.minHeight) || 0;
+};
+
+const onDoubleClick = () => {
+  if (!props.allowSplit) return;
+  if (!splitterRef.value || !containerRef?.value || !isVisible.value) return;
+
+  const prevPanel = splitterRef.value.previousElementSibling as HTMLElement;
+  const nextPanel = splitterRef.value.nextElementSibling as HTMLElement;
+
+  if (!prevPanel || !nextPanel) return;
+
+  const isHorizontal = direction === "horizontal";
+  const containerSize = isHorizontal
+    ? containerRef.value.getBoundingClientRect().width
+    : containerRef.value.getBoundingClientRect().height;
+
+  if (containerSize <= 0) return;
+
+  const prevBasis = parseFloat(prevPanel.style.flexBasis) || 0;
+  const nextBasis = parseFloat(nextPanel.style.flexBasis) || 0;
+  const totalBasis = prevBasis + nextBasis;
+
+  if (totalBasis <= 0) return;
+
+  let newPrevBasis = totalBasis / 2;
+  let newNextBasis = totalBasis / 2;
+
+  const prevMinSize = getPanelMinSize(prevPanel, isHorizontal);
+  const nextMinSize = getPanelMinSize(nextPanel, isHorizontal);
+  const minPrevBasis = (prevMinSize / containerSize) * 100;
+  const minNextBasis = (nextMinSize / containerSize) * 100;
+
+  if (minPrevBasis + minNextBasis > totalBasis) {
+    return; // Not enough space to satisfy min sizes
+  }
+
+  if (newPrevBasis < minPrevBasis) {
+    newPrevBasis = minPrevBasis;
+    newNextBasis = totalBasis - newPrevBasis;
+  } else if (newNextBasis < minNextBasis) {
+    newNextBasis = minNextBasis;
+    newPrevBasis = totalBasis - newNextBasis;
+  }
+
+  prevPanel.style.flexBasis = `${newPrevBasis}%`;
+  nextPanel.style.flexBasis = `${newNextBasis}%`;
+
+  if (syncPanelRatios) {
+    syncPanelRatios();
+  }
 };
 
 const startDrag = (e: MouseEvent) => {

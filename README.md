@@ -122,7 +122,11 @@ A flexible panel that can be resized by adjacent splitters.
 
 A draggable divider that allows users to resize adjacent panels.
 
+**Props:**
+- `allowSplit`: `boolean` (default: `true`) - Allows double-clicking the splitter to equally distribute space between adjacent panels.
+
 **Behavior:**
+- **Equal-size Distribution**: Double-clicking the splitter will equally distribute the space between the two adjacent panels, while respecting their `min-size` constraints. This feature can be disabled by setting `allowSplit` to `false`.
 - Only affects the two immediately adjacent panels
 - Automatically handles different panel configurations:
   - **Ratio-based Panels**: Adjusts ratio proportions dynamically
