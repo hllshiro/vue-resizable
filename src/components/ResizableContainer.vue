@@ -123,12 +123,13 @@ const initializePanels = () => {
   const isHorizontal = props.direction === "horizontal";
   containerState.totalSpace = getContainerSize();
 
-  // 为每个面板设置基于 ratio 的 flex 属性
-  visiblePanels.forEach(panel => {
-    const element = panel.element;
+  // 特殊处理：仅剩一个面板时，强制填满容器
+  if (visiblePanels.length === 1) {
+    const singlePanel = visiblePanels[0];
+    const element = singlePanel.element;
     
-    // 设置 flex 属性
-    element.style.flexGrow = panel.ratio.toString();
+    // 强制占满容器，无论原始ratio值如何
+    element.style.flexGrow = "1";
     element.style.flexShrink = "1";
     element.style.flexBasis = "0";
     
@@ -138,11 +139,35 @@ const initializePanels = () => {
     
     // 保持最小尺寸约束
     if (isHorizontal) {
-      element.style.minWidth = `${panel.minSize}px`;
+      element.style.minWidth = `${singlePanel.minSize}px`;
     } else {
-      element.style.minHeight = `${panel.minSize}px`;
+      element.style.minHeight = `${singlePanel.minSize}px`;
     }
-  });
+    
+    // 注意：保留原始ratio值不变，用于后续面板显示时的比例恢复
+    // singlePanel.ratio 保持不变
+  } else {
+    // 多面板正常按ratio分配
+    visiblePanels.forEach(panel => {
+      const element = panel.element;
+      
+      // 设置 flex 属性
+      element.style.flexGrow = panel.ratio.toString();
+      element.style.flexShrink = "1";
+      element.style.flexBasis = "0";
+      
+      // 清除可能的固定尺寸样式
+      element.style.width = "";
+      element.style.height = "";
+      
+      // 保持最小尺寸约束
+      if (isHorizontal) {
+        element.style.minWidth = `${panel.minSize}px`;
+      } else {
+        element.style.minHeight = `${panel.minSize}px`;
+      }
+    });
+  }
 
   emit("layoutChange", containerState);
 };
@@ -187,6 +212,12 @@ const syncPanelRatios = () => {
     .filter(panel => panel.visible);
   
   if (visiblePanels.length === 0) return;
+  
+  // 如果只有一个面板，不需要同步ratio，因为flex-grow被强制设置为1
+  // 而原始ratio值需要保留用于后续多面板恢复
+  if (visiblePanels.length === 1) {
+    return; // 保持原始ratio值不变
+  }
   
   // 获取所有可见面板的当前flex-grow值
   const flexGrowValues = visiblePanels.map(panel => {
