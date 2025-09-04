@@ -1,3 +1,5 @@
+English | [简体中文](./README.zh.md)
+
 # vue-resizable
 
 A Vue 3 component library for creating resizable areas. Supports flexible combinations and custom styles.
@@ -6,25 +8,22 @@ A Vue 3 component library for creating resizable areas. Supports flexible combin
 
 ## Features
 
-- 🎯 **Intuitive Drag Behavior**: Only adjacent panels are affected when dragging splitters
-- 🚀 **High Precision**: Built with native Flexbox for pixel-perfect calculations
-- 🔧 **Smart Layout Management**: Automatic space allocation using flex-grow properties
-- 📱 **Responsive**: Adapts to container size changes automatically
-- 🎨 **Customizable**: Full control over panel sizing and constraints
-- 💪 **TypeScript**: Complete type safety out of the box
-- 🪶 **Lightweight**: Minimal bundle size with zero dependencies
-- 👁️ **Dynamic Visibility**: Show/hide panels with automatic layout adjustment
-- ⚖️ **Ratio-based Sizing**: Use ratio properties for proportional panel sizing
-- 🔄 **Auto Space Distribution**: Components without explicit size automatically distribute remaining space
+- 🎯 **Intuitive Drag Behavior**: Only adjacent panels are affected when dragging splitters.
+- 🚀 **High Precision**: Implements a delta-based, "zero-sum" calculation during drag operations. This approach fundamentally prevents cumulative floating-point errors, making resizing perfectly stable and accurate.
+- 🔧 **Ratio-based Layout**: Panel sizes are controlled via `flex-basis` percentages derived from `ratio` props, providing predictable and proportional space allocation.
+- 📱 **Responsive**: Adapts to container size changes automatically.
+- 🎨 **Customizable**: Full control over panel sizing and constraints via CSS (`min-width`/`min-height`).
+- 💪 **TypeScript**: Complete type safety out of the box.
+- 🪶 **Lightweight**: Minimal bundle size with zero dependencies.
+- 👁️ **Dynamic Visibility**: Show/hide panels with automatic layout adjustment.
 
 ## Architecture
 
-This library uses a **Flexbox-based architecture** that leverages browser-native layout algorithms:
+This library uses a modern Flexbox architecture where panel dimensions are controlled by `flex-basis`.
 
-- **Fixed Panels**: Use `flex-grow: 0` with pixel-based sizing for precise control
-- **Flexible Panels**: Use `flex-grow: 1` for automatic space distribution
-- **Smart Conversion**: Flexible panels automatically convert to fixed when dragged for consistent behavior
-- **Space Conservation**: Guarantees total space allocation equals container size
+- **Ratio-based Sizing**: The primary way to control panel size is through the `ratio` prop. The container calculates the appropriate `flex-basis` percentage for each panel based on the sum of all visible panel ratios.
+- **Strict Sizing**: Panels are configured with `flex-grow: 0` and `flex-shrink: 0`. This ensures that the `flex-basis` percentage is strictly respected, preventing unpredictable resizing from the browser's default Flexbox behavior.
+- **Stable Drag Mechanics**: When a drag operation begins, all panel sizes are temporarily converted to a stable percentage-based `flex-basis`. The drag then applies a calculated pixel-delta, ensuring that what one panel gains, the adjacent one loses, guaranteeing the total size remains constant and eliminating layout shifts or rounding errors.
 
 ## Installation
 
@@ -131,7 +130,7 @@ A draggable divider that allows users to resize adjacent panels.
   - **Ratio-based Panels**: Adjusts ratio proportions dynamically
   - **Mixed Configurations**: Seamlessly handles combinations of different panel types
 - **Smart Visibility**: Automatically hides when adjacent panels are hidden
-- **Precise Calculations**: Uses ratio-based calculations for smooth resizing
+- **Precise Calculations**: Employs a delta-based, 'zero-sum' algorithm during dragging. This means the size gained by one panel is precisely the size lost by the other, eliminating cumulative rounding errors and ensuring exceptionally smooth and stable resizing.
 
 **Styling:**
 - Default size: 5px width/height
