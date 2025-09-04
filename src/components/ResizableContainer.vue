@@ -87,20 +87,21 @@ const getContainerSize = () => {
 // 检测旧用法并提供警告
 const detectLegacyUsage = () => {
   if (!containerRef.value) return;
-  
-  const panels = Array.from(containerRef.value.children)
-    .filter(child => child.classList.contains("resize-panel")) as HTMLElement[];
-  
-  panels.forEach(panel => {
-    const hasFixedWidth = panel.style.width?.includes('px');
-    const hasFixedHeight = panel.style.height?.includes('px');
-    
+
+  const panels = Array.from(containerRef.value.children).filter((child) =>
+    child.classList.contains("resize-panel")
+  ) as HTMLElement[];
+
+  panels.forEach((panel) => {
+    const hasFixedWidth = panel.style.width?.includes("px");
+    const hasFixedHeight = panel.style.height?.includes("px");
+
     if (hasFixedWidth || hasFixedHeight) {
       console.warn(
-        '[vue-resizable] 检测到使用 style 设置面板固定尺寸。' +
-        '建议使用 ratio 属性替代。固定尺寸设置将被忽略。'
+        "[vue-resizable] 检测到使用 style 设置面板固定尺寸。" +
+          "建议使用 ratio 属性替代。固定尺寸设置将被忽略。"
       );
-      
+
       // 清除固定尺寸样式
       panel.style.width = "";
       panel.style.height = "";
@@ -108,66 +109,50 @@ const detectLegacyUsage = () => {
   });
 };
 
-// 初始化面板 - 基于 ratio 分配空间
+// 初始化面板 - 基于 ratio 使用 flex-basis 百分比分配空间
 const initializePanels = () => {
   if (!containerRef.value) return;
 
   // 首先检测并清除旧用法
   detectLegacyUsage();
 
-  const visiblePanels = Array.from(containerState.panels.values())
-    .filter(panel => panel.visible);
-  
+  const visiblePanels = Array.from(containerState.panels.values()).filter(
+    (panel) => panel.visible
+  );
+
   if (visiblePanels.length === 0) return;
 
   const isHorizontal = props.direction === "horizontal";
   containerState.totalSpace = getContainerSize();
 
-  // 特殊处理：仅剩一个面板时，强制填满容器
-  if (visiblePanels.length === 1) {
-    const singlePanel = visiblePanels[0];
-    const element = singlePanel.element;
-    
-    // 强制占满容器，无论原始ratio值如何
-    element.style.flexGrow = "1";
-    element.style.flexShrink = "1";
-    element.style.flexBasis = "0";
-    
+  // 计算所有可见面板的ratio总和
+  const totalRatio = visiblePanels.reduce((sum, panel) => sum + panel.ratio, 0);
+
+  if (totalRatio === 0) return;
+
+  // 为每个面板分配基于ratio的百分比
+  visiblePanels.forEach((panel) => {
+    const element = panel.element;
+
+    // 计算百分比：(panel.ratio / totalRatio) * 100
+    const percentage = (panel.ratio / totalRatio) * 100;
+
+    // 使用 flex-basis 百分比模式
+    element.style.flexBasis = `${percentage}%`;
+    element.style.flexGrow = "0";
+    element.style.flexShrink = "0";
+
     // 清除可能的固定尺寸样式
     element.style.width = "";
     element.style.height = "";
-    
+
     // 保持最小尺寸约束
     if (isHorizontal) {
-      element.style.minWidth = `${singlePanel.minSize}px`;
+      element.style.minWidth = `${panel.minSize}px`;
     } else {
-      element.style.minHeight = `${singlePanel.minSize}px`;
+      element.style.minHeight = `${panel.minSize}px`;
     }
-    
-    // 注意：保留原始ratio值不变，用于后续面板显示时的比例恢复
-    // singlePanel.ratio 保持不变
-  } else {
-    // 多面板正常按ratio分配
-    visiblePanels.forEach(panel => {
-      const element = panel.element;
-      
-      // 设置 flex 属性
-      element.style.flexGrow = panel.ratio.toString();
-      element.style.flexShrink = "1";
-      element.style.flexBasis = "0";
-      
-      // 清除可能的固定尺寸样式
-      element.style.width = "";
-      element.style.height = "";
-      
-      // 保持最小尺寸约束
-      if (isHorizontal) {
-        element.style.minWidth = `${panel.minSize}px`;
-      } else {
-        element.style.minHeight = `${panel.minSize}px`;
-      }
-    });
-  }
+  });
 
   emit("layoutChange", containerState);
 };
@@ -182,7 +167,7 @@ const recalculateLayout = () => {
   const visiblePanels = Array.from(containerState.panels.values()).filter(
     (p) => p.visible
   );
-  
+
   if (visiblePanels.length === 0) {
     containerState.availableSpace = 0;
     return;
@@ -194,45 +179,41 @@ const recalculateLayout = () => {
   emit("layoutChange", containerState);
 };
 
-
-
 // 更新指定面板的ratio值（用于拖拽后保持状态）
 const updatePanelRatio = (panelId: string, newRatio: number) => {
   const panel = containerState.panels.get(panelId);
   if (panel) {
     panel.ratio = newRatio;
-    // 同步更新DOM元素的flex-grow
-    panel.element.style.flexGrow = newRatio.toString();
+    // 重新初始化所有面板以重新计算百分比分配
+    nextTick(() => {
+      initializePanels();
+    });
   }
 };
 
-// 根据当前flex-grow值同步更新面板ratio状态
+// 根据当前flex-basis百分比值同步更新面板ratio状态
 const syncPanelRatios = () => {
-  const visiblePanels = Array.from(containerState.panels.values())
-    .filter(panel => panel.visible);
-  
+  const visiblePanels = Array.from(containerState.panels.values()).filter(
+    (panel) => panel.visible
+  );
+
   if (visiblePanels.length === 0) return;
-  
-  // 如果只有一个面板，不需要同步ratio，因为flex-grow被强制设置为1
-  // 而原始ratio值需要保留用于后续多面板恢复
-  if (visiblePanels.length === 1) {
-    return; // 保持原始ratio值不变
-  }
-  
-  // 获取所有可见面板的当前flex-grow值
-  const flexGrowValues = visiblePanels.map(panel => {
-    const currentFlexGrow = parseFloat(panel.element.style.flexGrow || "1");
-    return { panel, flexGrow: currentFlexGrow };
+
+  // 获取所有可见面板的当前flex-basis百分比值
+  const flexBasisValues = visiblePanels.map((panel) => {
+    const basisStr = panel.element.style.flexBasis || "0%";
+    const currentBasis = parseFloat(basisStr); // 获取百分比数值
+    return { panel, basis: currentBasis };
   });
-  
-  // 计算总的flex-grow值
-  const totalFlexGrow = flexGrowValues.reduce((sum, item) => sum + item.flexGrow, 0);
-  
-  // 保持相对比例，但规范化为理解的数值
-  if (totalFlexGrow > 0) {
-    flexGrowValues.forEach(({ panel, flexGrow }) => {
-      // 计算相对比例，保持原有的比例关系
-      const relativeRatio = flexGrow / totalFlexGrow * visiblePanels.length;
+
+  // 计算总的百分比值（理论上应该接近100）
+  const totalBasis = flexBasisValues.reduce((sum, item) => sum + item.basis, 0);
+
+  // 将百分比转换为ratio比例关系
+  if (totalBasis > 0) {
+    flexBasisValues.forEach(({ panel, basis }) => {
+      // 计算相对比例，将百分比转换为ratio值
+      const relativeRatio = (basis / totalBasis) * visiblePanels.length;
       panel.ratio = Math.max(0.1, relativeRatio); // 确保最小值为0.1
     });
   }
@@ -244,7 +225,7 @@ const handlePanelShow = (panelId: string) => {
   if (!panel) return;
 
   panel.visible = true;
-  
+
   // 重新初始化所有面板以重新分配比例
   nextTick(() => {
     initializePanels();
@@ -260,7 +241,7 @@ const handlePanelHide = (panelId: string) => {
   const rect = panel.element.getBoundingClientRect();
   const isHorizontal = props.direction === "horizontal";
   const currentSize = isHorizontal ? rect.width : rect.height;
-  
+
   // 只有当尺寸大于0时才保存，避免保存错误值
   if (currentSize > 0) {
     panel.lastSize = currentSize;
@@ -268,7 +249,7 @@ const handlePanelHide = (panelId: string) => {
   }
 
   panel.visible = false;
-  
+
   // 重新初始化所有面板以重新分配比例
   nextTick(() => {
     initializePanels();

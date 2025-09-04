@@ -150,7 +150,7 @@ const getPanelMinSize = (panel: HTMLElement, isHorizontal: boolean) => {
     : parseInt(style.minHeight) || 50;
 };
 
-const startDrag = (e: MouseEvent) => {
+const startDrag = (_e: MouseEvent) => {
   if (!splitterRef.value || !containerRef?.value || !isVisible.value) return;
 
   isActive.value = true;
@@ -175,76 +175,110 @@ const startDrag = (e: MouseEvent) => {
 
   const isHorizontal = direction === "horizontal";
 
-  // 获取初始尺寸
+  // 获取容器当前尺寸
+  const containerSize = isHorizontal
+    ? containerRef.value?.getBoundingClientRect().width
+    : containerRef.value?.getBoundingClientRect().height;
+
+  if (!containerSize || containerSize <= 0) {
+    isActive.value = false;
+    return;
+  }
+
+  // 在拖拽开始时，锁定相邻两个面板的总尺寸，避免拖拽过程中尺寸持续变化
   const prevRect = prevPanel.getBoundingClientRect();
   const nextRect = nextPanel.getBoundingClientRect();
-  const prevInitialSize = isHorizontal ? prevRect.width : prevRect.height;
-  const nextInitialSize = isHorizontal ? nextRect.width : nextRect.height;
+  const initialPrevSize = isHorizontal ? prevRect.width : prevRect.height;
+  const initialNextSize = isHorizontal ? nextRect.width : nextRect.height;
+  const lockedAdjacentTotalSize = initialPrevSize + initialNextSize;
 
-  // 获取最小尺寸约束
-  const prevMinSize = getPanelMinSize(prevPanel, isHorizontal);
-  const nextMinSize = getPanelMinSize(nextPanel, isHorizontal);
+  // 获取初始的面板起始位置，用于计算鼠标相对位置
+  const initialPrevStart = isHorizontal ? prevRect.left : prevRect.top;
 
-  const startPos = isHorizontal ? e.clientX : e.clientY;
+  // 在拖拽开始前，确保所有面板都使用百分比模式，避免尺寸跳跃
+  const allPanels = Array.from(containerRef.value.children).filter((child) =>
+    child.classList.contains("resize-panel")
+  ) as HTMLElement[];
+
+  // 获取当前所有面板的实际尺寸
+  const panelSizes = allPanels.map((panel) => {
+    const rect = panel.getBoundingClientRect();
+    const size = isHorizontal ? rect.width : rect.height;
+    return { panel, size };
+  });
+
+  // 计算总尺寸
+  const totalSize = panelSizes.reduce((sum, item) => sum + item.size, 0);
+
+  // 将所有面板转换为百分比模式，保持当前尺寸不变
+  if (totalSize > 0) {
+    panelSizes.forEach(({ panel, size }) => {
+      const percentage = (size / totalSize) * 100;
+      panel.style.flexBasis = `${percentage}%`;
+      panel.style.flexGrow = "0";
+      panel.style.flexShrink = "0";
+
+      // 清除固定尺寸
+      if (isHorizontal) {
+        panel.style.width = "";
+      } else {
+        panel.style.height = "";
+      }
+    });
+  }
 
   const doDrag = (moveEvent: MouseEvent) => {
-    const currentPos = isHorizontal ? moveEvent.clientX : moveEvent.clientY;
-    const delta = currentPos - startPos;
+    // 获取容器当前尺寸（用于转换为百分比）
+    const currentContainerSize = isHorizontal
+      ? containerRef.value?.getBoundingClientRect().width
+      : containerRef.value?.getBoundingClientRect().height;
 
-    // 如果移动距离太小，直接返回
-    if (Math.abs(delta) < 1) {
-      return;
-    }
+    if (!currentContainerSize || currentContainerSize <= 0) return;
 
-    // 计算新的尺寸
-    const newPrevSize = prevInitialSize + delta;
-    const newNextSize = nextInitialSize - delta;
+    // 使用锁定的相邻面板总尺寸，而不是实时获取
+    const adjacentTotalSize = lockedAdjacentTotalSize;
 
-    // 检查最小尺寸约束
-    if (newPrevSize < prevMinSize || newNextSize < nextMinSize) {
-      return;
-    }
+    // 计算鼠标相对于初始面板起始位置的偏移
+    const mousePositionInAdjacent = isHorizontal
+      ? moveEvent.clientX - initialPrevStart
+      : moveEvent.clientY - initialPrevStart;
 
-    // 新的比例模式：直接调整flex-grow比例
-    const totalSize = prevInitialSize + nextInitialSize;
-    if (totalSize > 0) {
-      const prevRatio = Math.max(0.1, newPrevSize / totalSize);
-      const nextRatio = Math.max(0.1, newNextSize / totalSize);
-      
-      // 获取当前的flex-grow值作为基础权重
-      const prevCurrentGrow = parseFloat(prevPanel.style.flexGrow || "1");
-      const nextCurrentGrow = parseFloat(nextPanel.style.flexGrow || "1");
-      const totalGrow = prevCurrentGrow + nextCurrentGrow;
-      
-      // 按新比例重新分配flex-grow
-      prevPanel.style.flexGrow = String(totalGrow * prevRatio);
-      nextPanel.style.flexGrow = String(totalGrow * nextRatio);
-      
-      // 确保面板使用flex模式
-      prevPanel.style.flexShrink = "1";
-      prevPanel.style.flexBasis = "0";
-      nextPanel.style.flexShrink = "1";
-      nextPanel.style.flexBasis = "0";
-      
-      // 清除可能的固定尺寸
-      if (isHorizontal) {
-        prevPanel.style.width = "";
-        nextPanel.style.width = "";
-      } else {
-        prevPanel.style.height = "";
-        nextPanel.style.height = "";
-      }
-    }
+    // 计算在相邻面板范围内的目标分割比例
+    let targetSplitRatio = mousePositionInAdjacent / adjacentTotalSize;
+
+    // 获取最小尺寸约束
+    const prevMinSize = getPanelMinSize(prevPanel, isHorizontal);
+    const nextMinSize = getPanelMinSize(nextPanel, isHorizontal);
+
+    // 计算最小尺寸约束在相邻面板中的比例
+    const minPrevRatio = prevMinSize / adjacentTotalSize;
+    const minNextRatio = nextMinSize / adjacentTotalSize;
+
+    // 应用约束，但只在相邻两个面板范围内
+    targetSplitRatio = Math.max(minPrevRatio, targetSplitRatio);
+    targetSplitRatio = Math.min(1 - minNextRatio, targetSplitRatio);
+
+    // 使用锁定的总尺寸计算新的相邻面板尺寸
+    const newPrevSize = adjacentTotalSize * targetSplitRatio;
+    const newNextSize = adjacentTotalSize * (1 - targetSplitRatio);
+
+    // 转换为百分比（相对于整个容器）
+    const newPrevBasis = (newPrevSize / currentContainerSize) * 100;
+    const newNextBasis = (newNextSize / currentContainerSize) * 100;
+
+    // 设置新的flex-basis百分比，只调整相邻两个面板
+    prevPanel.style.flexBasis = `${newPrevBasis}%`;
+    nextPanel.style.flexBasis = `${newNextBasis}%`;
   };
 
   const stopDrag = () => {
     isActive.value = false;
-    
+
     // 拖拽结束后同步面板的ratio状态，而不是重新初始化
     if (syncPanelRatios) {
       syncPanelRatios();
     }
-    
+
     document.removeEventListener("mousemove", doDrag);
     document.removeEventListener("mouseup", stopDrag);
   };
