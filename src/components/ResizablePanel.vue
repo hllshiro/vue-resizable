@@ -12,16 +12,13 @@
 
 <script setup lang="ts">
 import { ref, inject, watch, onMounted, onUnmounted, nextTick } from "vue";
-
-interface PanelState {
-  id: string;
-  element: HTMLElement;
-  visible: boolean;
-  lastSize: number;
-  minSize: number;
-  ratio: number;
-  flexGrow: number;
-}
+import {
+  RESIZE_DIRECTION,
+  REGISTER_PANEL,
+  UNREGISTER_PANEL,
+  UPDATE_PANEL_VISIBILITY,
+} from "../types";
+import type { PanelState } from "../types";
 
 const props = withDefaults(
   defineProps<{
@@ -34,21 +31,14 @@ const props = withDefaults(
   }
 );
 
-const emit = defineEmits<{
-  panelShow: [panelId: string];
-  panelHide: [panelId: string];
-}>();
-
 const panelRef = ref<HTMLElement>();
 const panelId = ref(`panel-${Math.random().toString(36).substr(2, 9)}`);
 
 // 注入容器提供的方法
-const direction = inject<"horizontal" | "vertical">("resizeDirection");
-const registerPanel = inject<(panel: PanelState) => void>("registerPanel");
-const unregisterPanel = inject<(panelId: string) => void>("unregisterPanel");
-const updatePanelVisibility = inject<
-  (panelId: string, visible: boolean) => void
->("updatePanelVisibility");
+const direction = inject(RESIZE_DIRECTION);
+const registerPanel = inject(REGISTER_PANEL);
+const unregisterPanel = inject(UNREGISTER_PANEL);
+const updatePanelVisibility = inject(UPDATE_PANEL_VISIBILITY);
 
 // 保存上次的尺寸状态
 const lastSize = ref(0);
@@ -93,11 +83,9 @@ watch(
     if (!newShow) {
       // 隐藏前保存状态
       saveCurrentState();
-      emit("panelHide", panelId.value);
     } else {
       // 显示时恢复状态
       await nextTick();
-      emit("panelShow", panelId.value);
     }
 
     // 通知容器更新布局
@@ -115,7 +103,7 @@ onMounted(async () => {
   if (panelRef.value && registerPanel) {
     saveCurrentState();
 
-    registerPanel({
+    const panelState: PanelState = {
       id: panelId.value,
       element: panelRef.value,
       visible: props.show,
@@ -123,7 +111,8 @@ onMounted(async () => {
       minSize: minSize.value,
       ratio: props.ratio,
       flexGrow: props.ratio,
-    });
+    };
+    registerPanel(panelState);
   }
 });
 
@@ -134,7 +123,7 @@ onUnmounted(() => {
   }
 });
 
-// 暴露方法供容器调用
+// 暴露方法供外部调用
 defineExpose({
   panelId: panelId.value,
   saveCurrentState,

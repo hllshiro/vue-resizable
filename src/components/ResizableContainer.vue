@@ -7,22 +7,18 @@
 
 <script setup lang="ts">
 import { provide, ref, onMounted, nextTick, reactive } from "vue";
-
-interface PanelState {
-  id: string;
-  element: HTMLElement;
-  visible: boolean;
-  lastSize: number;
-  minSize: number;
-  ratio: number;
-  flexGrow: number;
-}
-
-interface ContainerState {
-  panels: Map<string, PanelState>;
-  totalSpace: number;
-  availableSpace: number;
-}
+import {
+  RESIZE_DIRECTION,
+  CONTAINER_REF,
+  REGISTER_PANEL,
+  UNREGISTER_PANEL,
+  UPDATE_PANEL_VISIBILITY,
+  REINITIALIZE_PANELS,
+  UPDATE_PANEL_RATIO,
+  SYNC_PANEL_RATIOS,
+  type PanelState,
+  type ContainerState,
+} from "../types";
 
 const props = defineProps<{
   direction: "horizontal" | "vertical";
@@ -40,8 +36,8 @@ const containerState = reactive<ContainerState>({
 });
 
 // 提供给子组件的方法
-provide("resizeDirection", props.direction);
-provide("containerRef", containerRef);
+provide(RESIZE_DIRECTION, props.direction);
+provide(CONTAINER_REF, containerRef);
 
 // 注册面板
 const registerPanel = (panelState: PanelState) => {
@@ -71,9 +67,9 @@ const updatePanelVisibility = (panelId: string, visible: boolean) => {
   }
 };
 
-provide("registerPanel", registerPanel);
-provide("unregisterPanel", unregisterPanel);
-provide("updatePanelVisibility", updatePanelVisibility);
+provide(REGISTER_PANEL, registerPanel);
+provide(UNREGISTER_PANEL, unregisterPanel);
+provide(UPDATE_PANEL_VISIBILITY, updatePanelVisibility);
 
 // 获取容器的可用空间
 const getContainerSize = () => {
@@ -219,43 +215,6 @@ const syncPanelRatios = () => {
   }
 };
 
-// 处理面板显示 - 重新分配比例
-const handlePanelShow = (panelId: string) => {
-  const panel = containerState.panels.get(panelId);
-  if (!panel) return;
-
-  panel.visible = true;
-
-  // 重新初始化所有面板以重新分配比例
-  nextTick(() => {
-    initializePanels();
-  });
-};
-
-// 处理面板隐藏 - 保存尺寸
-const handlePanelHide = (panelId: string) => {
-  const panel = containerState.panels.get(panelId);
-  if (!panel) return;
-
-  // 隐藏前保存当前实际尺寸
-  const rect = panel.element.getBoundingClientRect();
-  const isHorizontal = props.direction === "horizontal";
-  const currentSize = isHorizontal ? rect.width : rect.height;
-
-  // 只有当尺寸大于0时才保存，避免保存错误值
-  if (currentSize > 0) {
-    panel.lastSize = currentSize;
-    panel.flexGrow = parseFloat(panel.element.style.flexGrow || "1");
-  }
-
-  panel.visible = false;
-
-  // 重新初始化所有面板以重新分配比例
-  nextTick(() => {
-    initializePanels();
-  });
-};
-
 // 监听容器尺寸变化
 const resizeObserver = new ResizeObserver(() => {
   nextTick(() => {
@@ -285,11 +244,9 @@ onMounted(async () => {
 });
 
 // 提供重新初始化的方法
-provide("reinitializePanels", initializePanels);
-provide("updatePanelRatio", updatePanelRatio);
-provide("syncPanelRatios", syncPanelRatios);
-provide("handlePanelShow", handlePanelShow);
-provide("handlePanelHide", handlePanelHide);
+provide(REINITIALIZE_PANELS, initializePanels);
+provide(UPDATE_PANEL_RATIO, updatePanelRatio);
+provide(SYNC_PANEL_RATIOS, syncPanelRatios);
 
 // 暴露方法供外部调用
 defineExpose({

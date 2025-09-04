@@ -1,4 +1,4 @@
-import type { Component, App } from "vue";
+import type { Component, App, Ref, InjectionKey } from "vue";
 
 // Panel State Interface
 export interface PanelState {
@@ -7,7 +7,7 @@ export interface PanelState {
   visible: boolean;
   lastSize: number;
   minSize: number;
-  ratio: number; // 新增：面板初始大小比例权重
+  ratio: number;
   flexGrow: number;
 }
 
@@ -33,11 +33,6 @@ export interface ResizableSplitterProps {
 }
 
 // Event Interfaces
-export interface PanelVisibilityEvents {
-  panelShow: [panelId: string];
-  panelHide: [panelId: string];
-}
-
 export interface ContainerLayoutEvents {
   layoutChange: [layout: ContainerState];
 }
@@ -66,34 +61,11 @@ export type FlexGrowValue = number;
 export type SizeValue = number;
 
 // Provider/Inject Keys (for type safety)
-export const INJECTION_KEYS = {
-  RESIZE_DIRECTION: 'resizeDirection' as const,
-  CONTAINER_REF: 'containerRef' as const,
-  REGISTER_PANEL: 'registerPanel' as const,
-  UNREGISTER_PANEL: 'unregisterPanel' as const,
-  UPDATE_PANEL_VISIBILITY: 'updatePanelVisibility' as const,
-  REINITIALIZE_PANELS: 'reinitializePanels' as const,
-  HANDLE_PANEL_SHOW: 'handlePanelShow' as const,
-  HANDLE_PANEL_HIDE: 'handlePanelHide' as const,
-} as const;
-
-// Layout Calculation Types
-export interface LayoutCalculationOptions {
-  respectMinSizes: boolean;
-  preserveFlexRatios: boolean;
-  smoothTransitions: boolean;
-}
-
-export interface SpaceDistributionStrategy {
-  type: 'proportional' | 'equal' | 'weighted';
-  weights?: number[];
-}
-
-// Configuration Interface
-export interface ResizableConfig {
-  defaultMinSize: number;
-  transitionDuration: number;
-  enableSmartSplitters: boolean;
-  layoutCalculation: LayoutCalculationOptions;
-  spaceDistribution: SpaceDistributionStrategy;
-}
+export const RESIZE_DIRECTION: InjectionKey<'horizontal' | 'vertical'> = Symbol('RESIZE_DIRECTION');
+export const CONTAINER_REF: InjectionKey<Ref<HTMLElement | undefined>> = Symbol('CONTAINER_REF');
+export const REGISTER_PANEL: InjectionKey<(panel: PanelState) => void> = Symbol('REGISTER_PANEL');
+export const UNREGISTER_PANEL: InjectionKey<(panelId: string) => void> = Symbol('UNREGISTER_PANEL');
+export const UPDATE_PANEL_VISIBILITY: InjectionKey<(panelId: string, visible: boolean) => void> = Symbol('UPDATE_PANEL_VISIBILITY');
+export const REINITIALIZE_PANELS: InjectionKey<() => void> = Symbol('REINITIALIZE_PANELS');
+export const UPDATE_PANEL_RATIO: InjectionKey<(panelId: string, newRatio: number) => void> = Symbol('UPDATE_PANEL_RATIO');
+export const SYNC_PANEL_RATIOS: InjectionKey<() => void> = Symbol('SYNC_PANEL_RATIOS');
