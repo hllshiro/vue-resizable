@@ -10,7 +10,7 @@ A Vue 3 component library for creating resizable areas. Supports flexible combin
 
 - 🎯 **Intuitive Drag Behavior**: Only adjacent panels are affected when dragging splitters.
 - 🚀 **High Precision**: Implements a delta-based, "zero-sum" calculation during drag operations. This approach fundamentally prevents cumulative floating-point errors, making resizing perfectly stable and accurate.
-- 🔧 **Ratio-based Layout**: Panel sizes are controlled via `flex-basis` percentages derived from `ratio` props, providing predictable and proportional space allocation.
+- 🔧 **Proportional Initialization**: Use the `ratio` prop to define the initial proportional size of panels.
 - 📱 **Responsive**: Adapts to container size changes automatically.
 - 🎨 **Customizable**: Full control over panel sizing and constraints via CSS (`min-width`/`min-height`).
 - 💪 **TypeScript**: Complete type safety out of the box.
@@ -21,7 +21,7 @@ A Vue 3 component library for creating resizable areas. Supports flexible combin
 
 This library uses a modern Flexbox architecture where panel dimensions are controlled by `flex-basis`.
 
-- **Ratio-based Sizing**: The primary way to control panel size is through the `ratio` prop. The container calculates the appropriate `flex-basis` percentage for each panel based on the sum of all visible panel ratios.
+- **Initial Sizing with Ratios**: The `ratio` prop is used to determine the initial distribution of space among panels. On load, the container calculates the appropriate `flex-basis` percentage for each panel based on the sum of all visible panel ratios. After initialization, panel sizes are determined by user-driven resizing.
 - **Strict Sizing**: Panels are configured with `flex-grow: 0` and `flex-shrink: 0`. This ensures that the `flex-basis` percentage is strictly respected, preventing unpredictable resizing from the browser's default Flexbox behavior.
 - **Stable Drag Mechanics**: When a drag operation begins, all panel sizes are temporarily converted to a stable percentage-based `flex-basis`. The drag then applies a calculated pixel-delta, ensuring that what one panel gains, the adjacent one loses, guaranteeing the total size remains constant and eliminating layout shifts or rounding errors.
 
@@ -110,11 +110,9 @@ A flexible panel that can be resized by adjacent splitters.
 - `ratio`: `number` (default: `1`) - Panel size ratio for proportional sizing
 
 **Sizing Behavior:**
-- **Ratio-based Sizing**: Use the `ratio` prop to control panel proportions
-  - Higher ratio values get more space allocation
-  - All panels' ratios are calculated proportionally
-- **Auto Distribution**: Panels without explicit sizing automatically distribute remaining space
-- **Dynamic Visibility**: Use the `show` prop to hide/show panels with automatic layout recalculation
+- **Ratio-based Initial Sizing**: Use the `ratio` prop to set the initial size of the panel relative to others.
+  - Higher `ratio` values get more space allocation on initialization.
+- **Dynamic Visibility**: Use the `show` prop to hide/show panels with automatic layout recalculation.
 
 **CSS Properties:**
 - `min-width`, `min-height`: Minimum size constraints
